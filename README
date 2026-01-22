@@ -46,6 +46,8 @@ python manage.py test game.test.test_views
 python manage.py test game.test.test_security
 python manage.py test users.test.test_forms
 
+
+
 ⚠️ Решение частых проблем
 Проблема: Порт уже используется
 bash
