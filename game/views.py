@@ -11,18 +11,60 @@ class SaveGameSessionView(APIView):
     def post(self, request):
         data = request.data
         data['user'] = request.user.id
+        
         serializer = GameSessionSerializer(data=data)
         if serializer.is_valid():
             session = serializer.save()
-            # Обновляем лидерборд
-            best_score = GameSession.objects.filter(user=request.user, is_completed=True).aggregate(Max('score'))['score__max'] or 0
-            entry, created = LeaderboardEntry.objects.update_or_create(
-                user=request.user,
-                defaults={'score': best_score}
-            )
-            # Здесь можно добавить логику достижений
+            
+            # ОБНОВЛЯЕМ ЛИДЕРБОРД - ТОЛЬКО ЕСЛИ ИГРА ЗАВЕРШЕНА
+            if data.get('is_completed', False):
+                self.update_leaderboard(request.user)
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def update_leaderboard(self, user):
+        """
+        Обновляет лидерборд для пользователя.
+        Гарантирует только ОДНУ запись на пользователя.
+        """
+        # 1. Находим ЛУЧШИЙ счет пользователя среди завершенных игр
+        best_score = GameSession.objects.filter(
+            user=user, 
+            is_completed=True
+        ).aggregate(Max('score'))['score__max'] or 0
+        
+        print(f"Обновление лидерборда для {user.username}: лучший счет = {best_score}")
+        
+        # 2. УДАЛЯЕМ ВСЕ старые записи этого пользователя
+        deleted_count, _ = LeaderboardEntry.objects.filter(user=user).delete()
+        print(f"Удалено старых записей: {deleted_count}")
+        
+        # 3. Создаем ТОЛЬКО ОДНУ новую запись (если есть счет)
+        if best_score > 0:
+            LeaderboardEntry.objects.create(
+                user=user,
+                score=best_score
+            )
+            print(f"Создана новая запись: {user.username} - {best_score} очков")
+        
+        # 4. ОБНОВЛЯЕМ ранги для всех пользователей
+        self.update_all_ranks()
+    
+    def update_all_ranks(self):
+        """
+        Обновляет ранги для всех записей в лидерборде.
+        """
+        # Получаем все записи, отсортированные по счету (по убыванию)
+        entries = LeaderboardEntry.objects.all().order_by('-score', 'date_achieved')
+        
+        current_rank = 1
+        for entry in entries:
+            entry.rank = current_rank
+            entry.save()
+            current_rank += 1
+        
+        print(f"Обновлены ранги для {entries.count()} записей")
 
 class LoadLastSessionView(APIView):
     def get(self, request):
@@ -35,12 +77,61 @@ class LeaderboardView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        entries = LeaderboardEntry.objects.all().order_by('-score')[:50]
-        for i, entry in enumerate(entries):
-            entry.rank = i + 1
-            entry.save()
+        # 1. ОЧИСТКА ДУБЛИКАТОВ (на всякий случай)
+        self.clean_duplicates()
+        
+        # 2. ОБНОВЛЕНИЕ РАНГОВ
+        self.update_ranks()
+        
+        # 3. ПОЛУЧЕНИЕ ДАННЫХ
+        entries = LeaderboardEntry.objects.all().order_by('-score', 'date_achieved')[:50]
+        
+        # 4. СЕРИАЛИЗАЦИЯ
         serializer = LeaderboardSerializer(entries, many=True)
+        
+        print(f"Отправлено {len(entries)} записей в лидерборд")
         return Response(serializer.data)
+    
+    def clean_duplicates(self):
+        """
+        Удаляет дубликаты: оставляет только запись с максимальным счетом для каждого пользователя
+        """
+        from django.db.models import Max
+        
+        # Находим ID пользователей с дубликатами
+        duplicate_users = LeaderboardEntry.objects.values('user').annotate(
+            count=models.Count('id'),
+            max_score=Max('score')
+        ).filter(count__gt=1)
+        
+        for dup in duplicate_users:
+            user_id = dup['user']
+            max_score = dup['max_score']
+            
+            # Удаляем ВСЕ записи пользователя
+            LeaderboardEntry.objects.filter(user_id=user_id).delete()
+            
+            # Создаем ОДНУ запись с максимальным счетом
+            from django.contrib.auth.models import User
+            user = User.objects.get(id=user_id)
+            LeaderboardEntry.objects.create(
+                user=user,
+                score=max_score
+            )
+            
+            print(f"Очищен дубликат для {user.username}: оставлен счет {max_score}")
+    
+    def update_ranks(self):
+        """
+        Присваивает правильные ранги
+        """
+        entries = LeaderboardEntry.objects.all().order_by('-score', 'date_achieved')
+        
+        rank = 1
+        for entry in entries:
+            entry.rank = rank
+            entry.save(update_fields=['rank'])
+            rank += 1
 
 class UserAchievementsView(APIView):
     def get(self, request):
