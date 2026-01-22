@@ -5,20 +5,11 @@ venv\Scripts\activate   # Для Windows
 
 #если нужно утсановить зависимости
 pip install -r requirements.txt
-pip install django djangorestframework psycopg2-binary django-cors-headers djangorestframework-simplejwt pillow django-import-export openpyxl tablib[xlsx]
-python manage.py migrate #или то что написано ниже
-python manage.py createsuperuser #или то что написано ниже
+# Или если нет файла requirements.txt:
+pip install django djangorestframework psycopg2-binary django-cors-headers djangorestframework-simplejwt pillow django-import-export openpyxl tablib[xlsx] python-dotenv
 
 docker-compose up -d --build
 docker-compose down
-
-docker-compose exec web python manage.py createsuperuser
-
-важные ссылки:
-
-http://127.0.0.1:8001/admin/ админ панель
-http://127.0.0.1:5500/index.html игра
-
 #(если понадобится)
 # 1. Создать миграции
 docker-compose exec web python manage.py makemigrations
@@ -29,13 +20,57 @@ docker-compose exec web python manage.py migrate
 # 3. Проверить статус
 docker-compose exec web python manage.py showmigrations
 
+#4. Создать супер пользователя
+docker-compose exec web python manage.py createsuperuser
 
+важные ссылки:
 
-# для тестов
+http://127.0.0.1:8001/admin/ админ панель
+http://127.0.0.1:5500/index.html игра
+
+# для тестов 8 лаба
 cd D:\ВУЗ\8
-pip install python-dotenv
-pip install -r requirements.txt
 
-
+# Запуск всех тестов (78 тестов)
 python run_all_tests.py
 
+# Все тесты game:
+python manage.py test game.test
+
+# Все тесты users:
+python manage.py test users.test
+
+# Конкретные тестовые файлы:
+python manage.py test game.test.test_models
+python manage.py test game.test.test_views
+python manage.py test game.test.test_security
+python manage.py test users.test.test_forms
+
+⚠️ Решение частых проблем
+Проблема: Порт уже используется
+bash
+# Для Docker измените порты в docker-compose.yml
+# Для ручного запуска:
+python manage.py runserver 8080
+
+Проблема: Ошибка с psycopg2 (PostgreSQL)
+bash
+# Установите в виртуальное окружение:
+pip install psycopg2-binary
+
+# Или используйте SQLite, изменив settings.py:
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+Проблема: Ошибки при запуске тестов
+bash
+# Убедитесь, что в backend/settings.py закомментированы строки:
+# from dotenv import load_dotenv
+# load_dotenv()
+
+# Или установите python-dotenv:
+pip install python-dotenv
