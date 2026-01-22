@@ -4,6 +4,7 @@ source venv/bin/activate  # Для Linux/Mac
 venv\Scripts\activate   # Для Windows
 
 #если нужно утсановить зависимости
+pip install -r requirements.txt
 pip install django djangorestframework psycopg2-binary django-cors-headers djangorestframework-simplejwt pillow django-import-export openpyxl tablib[xlsx]
 python manage.py migrate #или то что написано ниже
 python manage.py createsuperuser #или то что написано ниже
@@ -27,3 +28,10 @@ docker-compose exec web python manage.py migrate
 
 # 3. Проверить статус
 docker-compose exec web python manage.py showmigrations
+
+
+
+# для тестов
+cd D:\ВУЗ\8
+pip install python-dotenv
+pip install -r requirements.txt
