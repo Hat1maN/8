@@ -1,13 +1,12 @@
-
 services:
   db:
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      POSTGRES_DB: maze_db
-      POSTGRES_USER: maze_user
-      POSTGRES_PASSWORD: maze_pass
+      POSTGRES_DB: ${POSTGRES_DB:-maze_db}
+      POSTGRES_USER: ${POSTGRES_USER:-maze_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-maze_pass}
 
   web:
     build: .
@@ -18,12 +17,14 @@ services:
       - "8001:8000"
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
-    - POSTGRES_HOST=db
-    - POSTGRES_DB=maze_db
-    - POSTGRES_USER=maze_user
-    - POSTGRES_PASSWORD=maze_pass
-    - POSTGRES_PORT=5432
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=${POSTGRES_DB:-maze_db}
+      - POSTGRES_USER=${POSTGRES_USER:-maze_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-maze_pass}
+      - POSTGRES_PORT=5432
 
 volumes:
   postgres_data:

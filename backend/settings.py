@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from datetime import timedelta
+from dotenv import load_dotenv
+
+# Загружаем .env файл
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +26,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ov&$%yys$5&*xqulr^)w%kl1@5n#6qv=#67_+ng&@1h*obpo_*'
+# Берем из .env или используем запасной
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ov&$%yys$5&*xqulr^)w%kl1@5n#6qv=#67_+ng&@1h*obpo_*')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Берем из .env или True по умолчанию
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
-ALLOWED_HOSTS = []
+# Берем из .env или пустой список
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -81,19 +90,16 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-import os
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'maze_db'),
         'USER': os.getenv('POSTGRES_USER', 'maze_user'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'maze_pass'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),  # В Docker будет 'db', локально 'localhost'
+        'HOST': os.getenv('POSTGRES_HOST', 'db'),  # В Docker будет 'db', локально 'localhost'
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -130,9 +136,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
-import os
-from datetime import timedelta
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

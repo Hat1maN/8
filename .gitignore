@@ -1,0 +1,74 @@
+# Django
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Базы данных
+*.sqlite3
+*.db
+db.sqlite3
+
+# Миграции (если хочешь игнорировать, но лучше нет)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Логи
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# Media files (загруженные пользователями)
+/media/
+!media/.gitkeep
+
+# Статические файлы (в production)
+/staticfiles/
+
+# Тестовые данные
+fixtures.json
+test_data/
+
+# Python
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Operating System
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Программы
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Временные файлы
+temp/
+tmp/
