@@ -1,0 +1,29 @@
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: maze_db
+      POSTGRES_USER: maze_user
+      POSTGRES_PASSWORD: maze_pass
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    environment:
+    - POSTGRES_HOST=db
+    - POSTGRES_DB=maze_db
+    - POSTGRES_USER=maze_user
+    - POSTGRES_PASSWORD=maze_pass
+    - POSTGRES_PORT=5432
+
+volumes:
+  postgres_data:

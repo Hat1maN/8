@@ -1,0 +1,29 @@
+cd backend
+python -m venv venv
+source venv/bin/activate  # Для Linux/Mac
+venv\Scripts\activate   # Для Windows
+
+#если нужно утсановить зависимости
+pip install django djangorestframework psycopg2-binary django-cors-headers djangorestframework-simplejwt pillow django-import-export openpyxl tablib[xlsx]
+python manage.py migrate #или то что написано ниже
+python manage.py createsuperuser #или то что написано ниже
+
+docker-compose up -d --build
+docker-compose down
+
+docker-compose exec web python manage.py createsuperuser
+
+важные ссылки:
+
+http://127.0.0.1:8001/admin/ админ панель
+http://127.0.0.1:5500/index.html игра
+
+#(если понадобится)
+# 1. Создать миграции
+docker-compose exec web python manage.py makemigrations
+
+# 2. Применить миграции
+docker-compose exec web python manage.py migrate
+
+# 3. Проверить статус
+docker-compose exec web python manage.py showmigrations
